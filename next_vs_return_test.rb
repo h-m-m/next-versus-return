@@ -78,38 +78,31 @@ class NextVsReturnTest < Minitest::Test
     refute true
   end
 
-  class Tester
-    def initialize
-      @lambda = lambda { |x|
-        return false if x.length > 1
-        return true if x =~ /^\d+/
-        return false if x=~ /^[A-Z]/
-      }
-      @proc = proc  { |x|
-        return false if x.length > 1
-        return true if x =~ /^\d+/
-        return false if x=~ /^[A-Z]/
-      }
-    end
-    
-    def filter_with_lambda(array)
-      array.select &@lambda
-    end
-
-    def filter_with_proc(array)
-      array.select &@proc
-    end
-
+  def create_lambda
+    return lambda { |x|
+      return false if x.length > 1
+      return true if x =~ /^\d+/
+      return false if x=~ /^[A-Z]/
+    }
+  end
+  
+  def create_proc
+    return proc  { |x|
+      return false if x.length > 1
+      return true if x =~ /^\d+/
+      return false if x=~ /^[A-Z]/
+    }
   end
 
-  def test_return_in_a_lambda_in_another_class_works
-    tester = Tester.new
-    result = tester.filter_with_lambda(@series)
+  def test_return_in_a_lambda_created_in_a_method_that_has_already_returned_is_fine
+    filter = create_lambda
+    result = @series.select &filter
     assert_equal(@series_filtered, result)
   end
 
-  def test_return_in_a_proc_in_another_class_is_a_problem
-    tester = Tester.new
-    assert_raises(LocalJumpError) { result = tester.filter_with_proc(@series)}
+  def test_return_in_a_proc_created_in_a_method_that_has_already_returned_is_a_problem
+    filter = initialize_proc
+    assert_raises(LocalJumpError) { @series.select &filter }
   end
+
 end
